@@ -20,7 +20,11 @@ class Table(object):
         newstp = []
         q = True
         if queryoptions == []:
-            i, final = self.worker.Read()
+            try:
+                i, final = self.worker.Read()
+            except:
+                i = 0
+                final = 0
         else:
             i, Treader = self.worker.Read()
             for isinvert, fieldname, values in queryoptions: 

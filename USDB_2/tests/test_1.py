@@ -1,6 +1,9 @@
 from typing import ValuesView
 import unittest
+import unittest.mock
 from Pdbms import Pdbms
+from Table import Table
+from Worker import Worker
 
 class Test_Pdbms_CreateDB( unittest.TestCase ):
     def test_CreateDB_none(self):
@@ -378,11 +381,35 @@ class Test_Pdbms_Restore( unittest.TestCase ):
                 self.assertIn( i.get( "Role" ), roles )
 
 class Test_Worker_Insert( unittest.TestCase ):
-    def setUp(self)->None:
-        pass
-class Test_Worker_Select( unittest.TestCase ):
-    pass
-class Test_Worker_Delete( unittest.TestCase ):
-    pass
+    def test_Worker_Insert_Ok(self):
+        t = Table("ok",["f", "s"])
+        t.worker.Insert = unittest.mock.MagicMock()
+        t.Insert({"f":"12","s":"23"})
+        t.worker.Insert.assert_called()
+    def test_Worker_Insert_Args(self):
+        t = Table("ok",["f", "s"])
+        t.worker.Insert = unittest.mock.MagicMock()
+        t.Insert({"f":"12","s":"23"})
+        t.worker.Insert.assert_called_once_with({"f":"12","s":"23","del":False})
+    def test_Worker_Insert_None(self):
+        t = Table("ok",[])
+        t.worker.Insert = unittest.mock.MagicMock()
+        t.Insert({})
+        t.worker.Insert.assert_called_once_with({"del":False})
+
+class Test_Worker_Read( unittest.TestCase ):
+    def test_Worker_Read_Ok(self):
+        t = Table("ok",["f", "s"])
+        t.worker.Read = unittest.mock.MagicMock()
+        t.Select()
+        t.worker.Read.assert_called()
+
+class Test_Worker_Read( unittest.TestCase ):
+    def test_Worker_Read_Ok(self):
+        t = Table("ok",["f", "s"])
+        t.worker.Delete = unittest.mock.MagicMock()
+        t.Delete()
+        t.worker.Delete.assert_called()
+
 if __name__ == '__main__':
     unittest.main()
