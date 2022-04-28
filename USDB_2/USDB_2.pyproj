@@ -29,6 +29,7 @@
     </Compile>
     <Compile Include="USDB_2.py" />
     <Compile Include="Pdbms.py" />
+    <Compile Include="Worker.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="tests\" />

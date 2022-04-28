@@ -14,4 +14,11 @@ class Database(object):
         return self.TableDict.get( tablename ).Select(queryoptions)
     def Delete(self, tablename, queryoptions = []):
         self.TableDict.get( tablename ).Delete(queryoptions)
-
+    def Count(self, tablename):
+        return self.TableDict.get( tablename ).Count()
+    def Clean(self, tablename):
+        self.TableDict.get( tablename ).Clean()
+    def Delete_1(self, tablename, queryoptions = []):
+        self.TableDict.get( tablename ).Delete_1(queryoptions)
+    def Restore(self, tablename):
+        self.TableDict.get( tablename ).Restore()

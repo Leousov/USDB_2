@@ -30,9 +30,29 @@ class Pdbms(object):
             return Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Select(tablename, queryoptions)
         except:
             raise
-    def Delete( tablename, queryoptions = [] ):
+    def Delete(tablename, queryoptions = [] ):
         try:
             Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Delete(tablename, queryoptions)
+        except:
+            raise
+    def Count(tablename ):
+        try:
+            return Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Count(tablename)
+        except:
+            raise
+    def Clean(tablename):
+        try:
+            Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Clean(tablename)
+        except:
+            raise
+    def Delete_1(tablename, queryoptions = []):
+        try:
+            Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Delete_1(tablename, queryoptions)
+        except:
+            raise
+    def Restore(tablename):
+        try:
+            Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).Restore(tablename)
         except:
             raise
 if __name__ == "__main__":

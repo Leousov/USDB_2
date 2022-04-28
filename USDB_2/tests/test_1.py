@@ -43,7 +43,7 @@ class Test_Pdbms_CreateTable( unittest.TestCase ):
             self.assertRaises( ValueError )
     def test_CreateTable( self ):
         Pdbms.CreateTable("one", ["name", "surname"])
-        self.assertEqual( Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).TableDict.get( "one" ).filename, "one" ) 
+        self.assertEqual( Pdbms.DatabaseDict.get( Pdbms.ActiveDB ).TableDict.get( "one" ).worker.filename, "one" ) 
     def test_CreateTable_copy(self):
         try:
             Pdbms.CreateTable("one", ["name", "surname"])
@@ -155,7 +155,7 @@ class Test_Pdbms_Delete( unittest.TestCase ):
         Pdbms.Insert("Members", {"Name": "Alexey", "Surname": "Soros", "Role": "Son"})
         Pdbms.Insert("Property", {"Name": "Box", "Owner": "Mikhail"})
         Pdbms.Insert("Property", {"Name": "Car", "Owner": "Mikhail"})
-        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhai l"})
         Pdbms.Insert("Property", {"Name": "Magazin", "Owner": "Sonya"})
         Pdbms.Insert("Property", {"Name": "Second Car", "Owner": "Sonya"})
         Pdbms.Insert("Property", {"Name": "Kitchen", "Owner": "Sonya"})
@@ -164,11 +164,12 @@ class Test_Pdbms_Delete( unittest.TestCase ):
         Pdbms.Insert("Property", {"Name": "Doll", "Owner": "Alyona"})
         Pdbms.Insert("Property", {"Name": "Sword", "Owner": "Alyona"})
     def test_Pdbms_Delete_Children(self) -> None:
-        Pdbms.Delete( "Members" )
-        s = Pdbms.Select("Members",[[ True, "Role", ["Son", "Daughter"] ]])
+        Pdbms.Delete( "Members", [[ True, "Role", ["Son", "Daughter"] ]] )
+        s = Pdbms.Select("Members",[])
         names = ["Mikhail", "Sonya"]
         surname = ["Soros"]
         roles = ["Father", "Mother"]
+        self.assertNotEqual(s, [])
         for i in s:
             self.assertIn( i.get( "Name" ), names )
             self.assertIn( i.get( "Surname" ), surname )
@@ -183,18 +184,205 @@ class Test_Pdbms_Delete( unittest.TestCase ):
             self.assertIn( i.get( "Name" ), names )
             self.assertIn( i.get( "Surname" ), surname )
             self.assertIn( i.get( "Role" ), roles )
-
     def test_Pdbms_Delete_complex(self) -> None:
-        Pdbms.Delete( "Members" ,[[ False, "Role", ["Son", "Daughter"] ], [ True, "Name", ["Dima"]]  ])
+        Pdbms.Delete( "Members" ,[[ False, "Role", ["Father", "Mother"] ], [ True, "Name", ["Mikhail"]]  ])
         s = Pdbms.Select("Members")
-        names = ["Alexey"]
+        names = ["Sonya"]
         surname = ["Soros"]
-        roles = ["Son"]
+        roles = ["Mother"]
+        self.assertNotEqual(s, [])
         for i in s:
-
             self.assertIn( i.get( "Name" ), names )
             self.assertIn( i.get( "Surname" ), surname )
             self.assertIn( i.get( "Role" ), roles )
 
+class Test_Pdbms_Count( unittest.TestCase ):
+    def setUp(self) -> None:
+        Pdbms.DatabaseDict = {}
+        Pdbms.ActiveDB = None
+        Pdbms.CreateDB("Family")
+        Pdbms.UseDB("Family")
+        Pdbms.CreateTable("Members", ["Name", "Surname", "Role"])
+        Pdbms.CreateTable("Property", ["Name", "Owner"])
+        Pdbms.Insert("Members", {"Name": "Mikhail", "Surname": "Soros", "Role": "Father"})
+        Pdbms.Insert("Members", {"Name": "Sonya", "Surname": "Soros", "Role": "Mother"})
+        Pdbms.Insert("Members", {"Name": "Alyona", "Surname": "Soros", "Role": "Daughter"})
+        Pdbms.Insert("Members", {"Name": "Dima", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Members", {"Name": "Alexey", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Property", {"Name": "Box", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Car", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhai l"})
+        Pdbms.Insert("Property", {"Name": "Magazin", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Second Car", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Kitchen", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "PS5", "Owner": "Dima"})
+        Pdbms.Insert("Property", {"Name": "XBox Series X", "Owner": "Alexey"})
+        Pdbms.Insert("Property", {"Name": "Doll", "Owner": "Alyona"})
+        Pdbms.Insert("Property", {"Name": "Sword", "Owner": "Alyona"})
+    def test_Pdbms_Count(self):
+        self.assertEqual( Pdbms.Count("Property"), 10 )
+
+class Test_Pdbms_Clean( unittest.TestCase ):
+    def setUp(self) -> None:
+        Pdbms.DatabaseDict = {}
+        Pdbms.ActiveDB = None
+        Pdbms.CreateDB("Family")
+        Pdbms.UseDB("Family")
+        Pdbms.CreateTable("Members", ["Name", "Surname", "Role"])
+        Pdbms.CreateTable("Property", ["Name", "Owner"])
+        Pdbms.Insert("Members", {"Name": "Mikhail", "Surname": "Soros", "Role": "Father"})
+        Pdbms.Insert("Members", {"Name": "Sonya", "Surname": "Soros", "Role": "Mother"})
+        Pdbms.Insert("Members", {"Name": "Alyona", "Surname": "Soros", "Role": "Daughter"})
+        Pdbms.Insert("Members", {"Name": "Dima", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Members", {"Name": "Alexey", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Property", {"Name": "Box", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Car", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhai l"})
+        Pdbms.Insert("Property", {"Name": "Magazin", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Second Car", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Kitchen", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "PS5", "Owner": "Dima"})
+        Pdbms.Insert("Property", {"Name": "XBox Series X", "Owner": "Alexey"})
+        Pdbms.Insert("Property", {"Name": "Doll", "Owner": "Alyona"})
+        Pdbms.Insert("Property", {"Name": "Sword", "Owner": "Alyona"})
+    def test_Pdbms_Clean_All(self):
+        Pdbms.Delete_1( "Members", [] )
+        Pdbms.Clean("Members")
+        s = Pdbms.Select("Members",[])
+        names = []
+        surname = []
+        roles = []
+        for i in s:
+            self.assertIn( i.get( "Name" ), names )
+            self.assertIn( i.get( "Surname" ), surname )
+            self.assertIn( i.get( "Role" ), roles )
+    def test_Pdbms_Clean_Children(self):
+        Pdbms.Delete_1( "Members", [[ True, "Role", ["Son", "Daughter"] ]] )
+        Pdbms.Clean("Members")
+        s = Pdbms.Select("Members",[])
+        names = ["Mikhail", "Sonya"]
+        surname = ["Soros"]
+        roles = ["Father", "Mother"]
+        self.assertNotEqual(s, [])
+        for i in s:
+            self.assertIn( i.get( "Name" ), names )
+            self.assertIn( i.get( "Surname" ), surname )
+            self.assertIn( i.get( "Role" ), roles )
+    def test_Pdbms_Clean_complex(self):
+        Pdbms.Delete_1( "Members" ,[[ False, "Role", ["Father", "Mother"] ], [ True, "Name", ["Mikhail"]]  ])
+        Pdbms.Clean("Members")
+        s = Pdbms.Select("Members")
+        names = ["Sonya"]
+        surname = ["Soros"]
+        roles = ["Mother"]
+        self.assertNotEqual(s, [])
+        for i in s:
+            self.assertIn( i.get( "Name" ), names )
+            self.assertIn( i.get( "Surname" ), surname )
+            self.assertIn( i.get( "Role" ), roles )
+
+class Test_Pdbms_Delete_1( unittest.TestCase ):
+    def setUp(self) -> None:
+        Pdbms.DatabaseDict = {}
+        Pdbms.ActiveDB = None
+        Pdbms.CreateDB("Family")
+        Pdbms.UseDB("Family")
+        Pdbms.CreateTable("Members", ["Name", "Surname", "Role"])
+        Pdbms.CreateTable("Property", ["Name", "Owner"])
+        Pdbms.Insert("Members", {"Name": "Mikhail", "Surname": "Soros", "Role": "Father"})
+        Pdbms.Insert("Members", {"Name": "Sonya", "Surname": "Soros", "Role": "Mother"})
+        Pdbms.Insert("Members", {"Name": "Alyona", "Surname": "Soros", "Role": "Daughter"})
+        Pdbms.Insert("Members", {"Name": "Dima", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Members", {"Name": "Alexey", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Property", {"Name": "Box", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Car", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhai l"})
+        Pdbms.Insert("Property", {"Name": "Magazin", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Second Car", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Kitchen", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "PS5", "Owner": "Dima"})
+        Pdbms.Insert("Property", {"Name": "XBox Series X", "Owner": "Alexey"})
+        Pdbms.Insert("Property", {"Name": "Doll", "Owner": "Alyona"})
+        Pdbms.Insert("Property", {"Name": "Sword", "Owner": "Alyona"})
+
+class Test_Pdbms_Restore( unittest.TestCase ):
+    def setUp(self) -> None:
+        Pdbms.DatabaseDict = {}
+        Pdbms.ActiveDB = None
+        Pdbms.CreateDB("Family")
+        Pdbms.UseDB("Family")
+        Pdbms.CreateTable("Members", ["Name", "Surname", "Role"])
+        Pdbms.CreateTable("Property", ["Name", "Owner"])
+        Pdbms.Insert("Members", {"Name": "Mikhail", "Surname": "Soros", "Role": "Father"})
+        Pdbms.Insert("Members", {"Name": "Sonya", "Surname": "Soros", "Role": "Mother"})
+        Pdbms.Insert("Members", {"Name": "Alyona", "Surname": "Soros", "Role": "Daughter"})
+        Pdbms.Insert("Members", {"Name": "Dima", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Members", {"Name": "Alexey", "Surname": "Soros", "Role": "Son"})
+        Pdbms.Insert("Property", {"Name": "Box", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Car", "Owner": "Mikhail"})
+        Pdbms.Insert("Property", {"Name": "Flat", "Owner": "Mikhai l"})
+        Pdbms.Insert("Property", {"Name": "Magazin", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Second Car", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "Kitchen", "Owner": "Sonya"})
+        Pdbms.Insert("Property", {"Name": "PS5", "Owner": "Dima"})
+        Pdbms.Insert("Property", {"Name": "XBox Series X", "Owner": "Alexey"})
+        Pdbms.Insert("Property", {"Name": "Doll", "Owner": "Alyona"})
+        Pdbms.Insert("Property", {"Name": "Sword", "Owner": "Alyona"})
+    def test_Pdbms_Delete_1_Children(self) -> None:
+        Pdbms.Delete_1( "Members", [[ True, "Role", ["Son", "Daughter"] ]] )
+        s = Pdbms.Select("Members",[])
+        names = ["Mikhail", "Sonya"]
+        surname = ["Soros"]
+        roles = ["Father", "Mother"]
+        self.assertNotEqual(s, [])
+        for i in s:
+            if i.get( "del" ) == "True":
+                self.assertNotIn(i.get( "Name" ), names)
+                self.assertIn(i.get( "Surname" ), surname)
+                self.assertNotIn(i.get( "Role" ), roles)
+            else:
+                self.assertIn( i.get( "Name" ), names )
+                self.assertIn( i.get( "Surname" ), surname )
+                self.assertIn( i.get( "Role" ), roles )
+    def test_Pdbms_Delete_1_all(self) -> None:
+        Pdbms.Delete_1( "Members", [] )
+        s = Pdbms.Select("Members",[])
+        names = []
+        surname = ["Soros"]
+        roles = []
+        self.assertNotEqual(s, [])
+        for i in s:
+            if i.get( "del" ) == "True":
+                self.assertNotIn(i.get( "Name" ), names)
+                self.assertIn(i.get( "Surname" ), surname)
+                self.assertNotIn(i.get( "Role" ), roles)
+            else:
+                self.assertIn( i.get( "Name" ), names )
+                self.assertIn( i.get( "Surname" ), surname )
+                self.assertIn( i.get( "Role" ), roles )
+    def test_Pdbms_Delete_1_complex(self) -> None:
+        Pdbms.Delete_1( "Members" ,[[ False, "Role", ["Father", "Mother"] ], [ True, "Name", ["Mikhail"]]  ])
+        s = Pdbms.Select("Members")
+        names = ["Sonya"]
+        surname = ["Soros"]
+        roles = ["Mother"]
+        self.assertNotEqual(s, [])
+        for i in s:
+            if i.get( "del" ) == "True":
+                self.assertNotIn(i.get( "Name" ), names)
+                self.assertIn(i.get( "Surname" ), surname)
+                self.assertNotIn(i.get( "Role" ), roles)
+            else:
+                self.assertIn( i.get( "Name" ), names )
+                self.assertIn( i.get( "Surname" ), surname )
+                self.assertIn( i.get( "Role" ), roles )
+
+class Test_Worker_Insert( unittest.TestCase ):
+    def setUp(self)->None:
+        pass
+class Test_Worker_Select( unittest.TestCase ):
+    pass
+class Test_Worker_Delete( unittest.TestCase ):
+    pass
 if __name__ == '__main__':
     unittest.main()
